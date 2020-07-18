@@ -18,6 +18,7 @@
     "cron": "^1.8.2",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "express-handlebars": "^5.1.0",
     "express-http-to-https": "^1.1.4",
     "knex": "^0.21.2",
     "lodash": "^4.17.19",

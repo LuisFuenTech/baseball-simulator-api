@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Baseball Simulator</title>
+
+    <!-- Custome css -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="/favicon.png" type="image/png" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.7.6/css/mdb.min.css" rel="stylesheet">
+
+    <!-- JQuery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- Bootstrap tooltips -->
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/umd/popper.min.js"></script>
+    <!-- Bootstrap core JavaScript -->
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- MDB core JavaScript -->
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.7.6/js/mdb.min.js"></script>
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+        integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+        crossorigin="anonymous" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"
+        integrity="sha512-rmZcZsyhe0/MAjquhTgiUcb4d9knaFc7b5xAfju483gbEXTkeJRUMIPk6s3ySZMYUHEcjKbjLjyddGWMrNEvZg=="
+        crossorigin="anonymous"></script>
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+
+<body>
+
+    {{> header}}
+    <main class="container mx-auto">
+        {{> message}}
+        {{> errors}}
+        {{{ body }}}
+    </main>
+
+    {{> footer}}
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+    integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+    crossorigin="anonymous" charset="UTF-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.es.min.js"
+    integrity="sha512-5pjEAV8mgR98bRTcqwZ3An0MYSOleV04mwwYj2yw+7PBhFVf/0KcE+NEox0XrFiU5+x5t5qidmo5MgBkDD9hEw=="
+    crossorigin="anonymous"></script>
+<script src="/js/main.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(async function () {
+        const { href } = document.location;
+        let [arr] = href.match(/cliente\/.*/g);
+        const pagina = arr.split("/")[1] || "main";
+
+        moment.locale('en', {
+            week: { dow: 1 }
+        });
+        $("#datepicker").datepicker({
+            format: 'yyyy-mm-dd',
+            language: 'es',
+            daysOfWeekDisabled: [0, 4],
+            orientation: 'auto',
+            selectWeek: true
+        })
+            .on('changeDate', async function (e) {
+
+                const value = $("#date").val();
+                const firstDate = moment(value, "YYYY-MM-DD").day(1).format("YYYY-MM-DD");
+                const lastDate = moment(value, "YYYY-MM-DD").day(7).format("YYYY-MM-DD");
+                $("#date").val(firstDate + " a " + lastDate);
+
+                if (pagina === 'posiciones') await mostrarPosiciones({ fecha: firstDate });
+
+                if (pagina === 'partidos') await mostrarPartidos({ fecha: firstDate });
+            });
+
+        $('#datepicker').datepicker('update', new Date());
+
+        await mostrarPosiciones({ fecha: moment().format('YYYY-MM-DD') });
+        await mostrarPartidos({ fecha: moment().format('YYYY-MM-DD') });
+
+        const first = moment().day(1).format("YYYY-MM-DD");
+        const last = moment().day(7).format("YYYY-MM-DD");
+        $("#date").val(first + " a " + last);
+    })
+
+    async function mostrarPosiciones({ fecha }) {
+        try {
+            let { data } = await axios.get(`/encuentro/resultados?fecha=${fecha}`);
+            let table = '';
+
+            data.map((item, index) => {
+                table += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.nombre}</td>
+                    <td>${item.partidosGanados}</td>
+                    <td>${item.carreras}</td>
+                    <td>${item.homeRuns}</td>
+                    <td>${item.partidosPerdidos}</td>
+                </tr>
+            `
+            })
+
+            document.getElementById("posiciones-table").innerHTML = table;
+        } catch (error) { }
+    }
+
+    async function mostrarPartidos({ fecha }) {
+        try {
+            let { data } = await axios.get(`/encuentro/partidos?fecha=${fecha}`);
+            let table = '';
+
+            data.map(item => {
+                const filaLimpia = `<tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>`
+                const equipos = item.encuentros.map((equipo, index) => {
+                    return `
+                <tr>
+                    <td>${item.fecha}</td>
+                    <td>${item.hora}</td>
+                    <td>${equipo.equipoA.nombre}</td>
+                    <td>${equipo.equipoA.carreras}</td>
+                    <td>${equipo.equipoA.homeRuns}</td>
+                </tr>
+                <tr>
+                    <td>${item.fecha}</td>
+                    <td>${item.hora}</td>
+                    <td>${equipo.equipoB.nombre}</td>
+                    <td>${equipo.equipoB.carreras}</td>
+                    <td>${equipo.equipoB.homeRuns}</td>
+                </tr>
+                ${index === 0 ? filaLimpia : ''}
+                `
+                });
+
+
+                table += `
+                <div class="table-wrapper-scroll-y mt-20">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-striped">
+                    <thead class="thead-dark" align="center">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Equipo</th>
+                            <th>Carreras</th>
+                            <th>Home Runs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partidos-table" align="center">
+                        ${equipos.join(' ')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+                `
+            });
+
+            if(!data.length){
+                table = `<div class="jumbotron mt-4">
+                <h2 class="display-6">No hay partidos programados</h2>
+                <hr class="my-4">
+                </div>`
+            }
+
+            document.getElementById("all-partidos").innerHTML = table;
+        }
+        catch (error) {
+        }
+    }
+
+</script>
+
+</html>

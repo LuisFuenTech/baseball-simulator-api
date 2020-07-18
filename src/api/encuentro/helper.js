@@ -59,18 +59,21 @@ const obtenerResultados = async ({ encuentros, fecha }) => {
           equipoA: {
             nombre: item.equipoA,
             carreras: item.carrerasEquipoA,
-            homeRuns: item.homeRunsA
+            homeRuns: item.homeRunsA,
+            ganador: item.idGanador === item.idEquipoA
           },
           equipoB: {
             nombre: item.equipoB,
             carreras: item.carrerasEquipoB,
-            homeRuns: item.homeRunsB
+            homeRuns: item.homeRunsB,
+            ganador: item.idGanador === item.idEquipoB
           }
         };
       });
 
       resultados.push({
         fecha: dia.format('YYYY-MM-DD'),
+        hora: partidos[0].hora,
         encuentros: grupos
       });
     } catch (error) {
